@@ -1,101 +1,55 @@
+---
+author: "Kyle Jones"
+date_published: "July 24, 2025"
+date_exported_from_medium: "November 10, 2025"
+canonical_link: "https://medium.com/@kyle-t-jones/diagnosing-residual-phase-in-seismic-traces-using-python-and-the-hilbert-transform-87ed06783896"
+---
+
 # Diagnosing Residual Phase in Seismic Traces Using Python and the Hilbert Transform Seismic attributes offer a window into subsurface structure, when the
 wavelet is under control. In many exploration datasets, interpreters...
 
 ### Diagnosing Residual Phase in Seismic Traces Using Python and the Hilbert Transform
-Seismic attributes offer a window into subsurface structure, when the
-wavelet is under control. In many exploration datasets, interpreters
-rely on visual coherence, amplitude strength, or envelope consistency to
-track reflectors and make drilling decisions. But subtle errors in
-wavelet phase can distort structure, push peaks off target, and cloud
-our picture of the earth.
+Seismic attributes offer a window into subsurface structure, when the wavelet is under control. In many exploration datasets, interpreters rely on visual coherence, amplitude strength, or envelope consistency to track reflectors and make drilling decisions. But subtle errors in wavelet phase can distort structure, push peaks off target, and cloud our picture of the earth.
 
-This project began with a simple question: Can we detect and correct
-residual phase in a seismic trace using only one line of data?
+This project began with a simple question: Can we detect and correct residual phase in a seismic trace using only one line of data?
 
-We wanted to validate whether a strong reflector had the expected
-zero-phase response. If not, we wanted a method to measure the deviation
-and correct for it.
+We wanted to validate whether a strong reflector had the expected zero-phase response. If not, we wanted a method to measure the deviation and correct for it.
 
 ### The Business Problem
-Exploration teams use seismic data to estimate structure and reservoir
-properties. They interpret reflections from subsurface
-layers --- interfaces where acoustic impedance changes --- to map
-faults, pick horizons, and build models. If the data has been processed
-to zero phase, then strong reflections align with wavelet peaks or
-troughs, and envelope maxima line up.
+Exploration teams use seismic data to estimate structure and reservoir properties. They interpret reflections from subsurface layers --- interfaces where acoustic impedance changes --- to map faults, pick horizons, and build models. If the data has been processed to zero phase, then strong reflections align with wavelet peaks or troughs, and envelope maxima line up.
 
-But many datasets --- especially legacy surveys or public-domain
-volumes --- contain phase artifacts. This affects structural picks,
-time-depth conversion, and ultimately drilling decisions.
+But many datasets --- especially legacy surveys or public-domain volumes --- contain phase artifacts. This affects structural picks, time-depth conversion, and ultimately drilling decisions.
 
-Residual phase isn't always obvious to the eye. It lurks in the mismatch
-between trace extrema and envelope peaks. If a team assumes zero phase
-when the wavelet still carries a rotation, the maps will be wrong.
-That's the risk we wanted to address.
+Residual phase isn't always obvious to the eye. It lurks in the mismatch between trace extrema and envelope peaks. If a team assumes zero phase when the wavelet still carries a rotation, the maps will be wrong. That's the risk we wanted to address.
 
 ### The Analytics Approach
-We took a trace from the public Penobscot 3D dataset and used the
-Hilbert transform to compute the analytic signal. From that, we
-extracted the envelope and instantaneous phase.
+We took a trace from the public Penobscot 3D dataset and used the Hilbert transform to compute the analytic signal. From that, we extracted the envelope and instantaneous phase.
 
 
-The idea was to use the Hilbert transform to compute the envelope and
-phase. Then we could identify envelope peaks as proxies for strong
-reflectors and measure the phase at those peaks. Finally, we could
-estimate the average residual phase and apply a frequency-domain
-correction by shifting the phase spectrum. And as a bonus, we could
-verify the alignment between envelope peaks and corrected trace extrema.
+The idea was to use the Hilbert transform to compute the envelope and phase. Then we could identify envelope peaks as proxies for strong reflectors and measure the phase at those peaks. Finally, we could estimate the average residual phase and apply a frequency-domain correction by shifting the phase spectrum. And as a bonus, we could verify the alignment between envelope peaks and corrected trace extrema.
 
-We did all this in basic Python. No seismic workstation. No proprietary
-code. We kept it simple and reproducible (and admittedly much easier
-than doing this for a full segy file).
+We did all this in basic Python. No seismic workstation. No proprietary code. We kept it simple and reproducible (and admittedly much easier than doing this for a full segy file).
 
-The core of the method lies in estimating phase error not from the whole
-spectrum, but from the behavior of the envelope. This aligns with
-practical guidance from Roden and Sepúlveda (1999): if a peak in the
-envelope does not match a peak in the signal, phase error is present.
+The core of the method lies in estimating phase error not from the whole spectrum, but from the behavior of the envelope. This aligns with practical guidance from Roden and Sepúlveda (1999): if a peak in the envelope does not match a peak in the signal, phase error is present.
 
 ### The Solution
-We began by loading the trace file. We rewrote the original SEG tutorial
-from GNU Octave in Python and removed external dependencies.
-The `.trace` file format was
-tab-delimited text.
+We began by loading the trace file. We rewrote the original SEG tutorial from GNU Octave in Python and removed external dependencies. The `.trace` file format was tab-delimited text.
 
-We computed the Hilbert transform using SciPy, then extracted the
-envelope and unwrapped phase. By finding peaks in the envelope and
-recording the phase at those points, we estimated the residual phase
-error. In our case, it came out to about 0.64 radians --- roughly 37
-degrees.
+We computed the Hilbert transform using SciPy, then extracted the envelope and unwrapped phase. By finding peaks in the envelope and recording the phase at those points, we estimated the residual phase error. In our case, it came out to about 0.64 radians --- roughly 37 degrees.
 
-To correct this, we shifted the spectrum in the frequency domain. We
-applied a phase shift of --0.64 radians to the positive frequencies and
-+0.64 to the negative ones. This left the amplitude spectrum unchanged
-but rotated the wavelet back toward zero phase.
+To correct this, we shifted the spectrum in the frequency domain. We applied a phase shift of --0.64 radians to the positive frequencies and +0.64 to the negative ones. This left the amplitude spectrum unchanged but rotated the wavelet back toward zero phase.
 
-After the correction, we re-computed the Hilbert attributes and repeated
-the peak analysis. The result: envelope peaks and trace extrema were
-aligned, and the phase at envelope maxima centered on zero.
+After the correction, we re-computed the Hilbert attributes and repeated the peak analysis. The result: envelope peaks and trace extrema were aligned, and the phase at envelope maxima centered on zero.
 
 
-Obviously, this isn't a replacement for full seismic processing. It's a
-fast, analytic way to spot and fix residual phase on a single trace or
-in small test volumes. It gives interpreters a better handle on what
-they're seeing and improves the accuracy of every pick.
+Obviously, this isn't a replacement for full seismic processing. It's a fast, analytic way to spot and fix residual phase on a single trace or in small test volumes. It gives interpreters a better handle on what they're seeing and improves the accuracy of every pick.
 
 ### What You Can Do With This
-This method works with any 1D seismic trace to do a diagnostic check on
-suspect processing, adjust synthetic seismograms to match recorded data,
-evaluate whether a dataset truly has zero phase, and explore wavelet
-behavior.
+This method works with any 1D seismic trace to do a diagnostic check on suspect processing, adjust synthetic seismograms to match recorded data, evaluate whether a dataset truly has zero phase, and explore wavelet behavior.
 
-It also opens the door to automated residual phase correction in stacked
-sections or attribute volumes. If you can measure the phase error
-trace-by-trace, you can correct it trace-by-trace.
+It also opens the door to automated residual phase correction in stacked sections or attribute volumes. If you can measure the phase error trace-by-trace, you can correct it trace-by-trace.
 
-The technique builds on ideas published in [*The Leading
-Edge*](https://library.seg.org/doi/epub/10.1190/tle33101164.1) (October 2014) and developed by Steve
-Purves for the SEG tutorial series. We've adapted it here to fit modern
-Python workflows.
+The technique builds on ideas published in [*The Leading Edge*](https://library.seg.org/doi/epub/10.1190/tle33101164.1) (October 2014) and developed by Steve Purves for the SEG tutorial series. We've adapted it here to fit modern Python workflows.
 
 ### Full Code
 ```python
@@ -228,10 +182,3 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-::::::::By [Kyle Jones](https://medium.com/@kyle-t-jones) on
-[July 24, 2025](https://medium.com/p/87ed06783896).
-
-[Canonical
-link](https://medium.com/@kyle-t-jones/diagnosing-residual-phase-in-seismic-traces-using-python-and-the-hilbert-transform-87ed06783896)
-
-Exported from [Medium](https://medium.com) on November 10, 2025.
