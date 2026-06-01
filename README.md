@@ -11,14 +11,7 @@ This project began with a simple question: Can we detect and correct residual ph
 
 We wanted to validate whether a strong reflector had the expected zero-phase response. If not, we wanted a method to measure the deviation and correct for it.
 
-## About
 
-Place the code for this article in this repository.
-The original article export is saved as `article.md`.
-
-## Files
-
-Add your `.ipynb`, `.py`, `.yaml`, `.js`, `.ts`, or other project files here.
 
 ## Disclaimer
 
